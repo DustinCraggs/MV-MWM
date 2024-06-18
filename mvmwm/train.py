@@ -26,7 +26,7 @@ sys.path.append(str(pathlib.Path(__file__).parent.parent))
 
 import numpy as np
 from keras import backend as K
-import ruamel.yaml as yaml
+import ruamel.yaml
 
 import agent as agent
 import common
@@ -35,9 +35,8 @@ import common
 def main():
 
     # Load YAML Configs
-    configs = yaml.safe_load(
-        (pathlib.Path(sys.argv[0]).parent / "configs.yaml").read_text()
-    )
+    yaml = ruamel.yaml.YAML(typ="safe", pure=True)
+    configs = yaml.load((pathlib.Path(sys.argv[0]).parent / "configs.yaml").read_text())
     parsed, remaining = common.Flags(configs=["defaults"]).parse(known_only=True)
     config = common.Config(configs["defaults"])
     for name in parsed.configs:

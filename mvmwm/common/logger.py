@@ -2,6 +2,7 @@ import json
 import os
 import pathlib
 import time
+import wandb
 
 import numpy as np
 
@@ -18,7 +19,7 @@ class Logger:
     def add(self, mapping, prefix=None):
         step = int(self._step) * self._multiplier
         for name, value in dict(mapping).items():
-            name = f"{prefix}_{name}" if prefix else name
+            name = f"{prefix}/{name}" if prefix else name
             value = np.array(value)
             if len(value.shape) not in (0, 2, 3, 4):
                 raise ValueError(
@@ -80,6 +81,16 @@ class TerminalOutput:
             value = value.replace("+", "")
             value = value.replace("-0", "-")
         return value
+
+
+class WandbOutput:
+    def __init__(self, wandb_config):
+        self._run = wandb.init(**wandb_config)
+
+    def __call__(self, summaries):
+        scalars = {k: float(v) for _, k, v in summaries if len(v.shape) == 0}
+        print(scalars)
+        wandb.log(scalars)
 
 
 class JSONLOutput:

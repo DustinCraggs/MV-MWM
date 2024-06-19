@@ -21,4 +21,5 @@ pip install pyquaternion
 pip install tensorflow_addons
 pip3 install opencv-python==4.1.2.30
 pip install transformers==4.25.1
+pip install wandb
 

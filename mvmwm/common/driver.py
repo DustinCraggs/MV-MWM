@@ -9,10 +9,14 @@ class Driver:
         self._env_fn = env_fn
         self._kwargs = kwargs
         self._on_steps = []
+        self._on_acts = []
         self._on_resets = []
         self._on_episodes = []
         self._act_spaces = [env.act_space for env in envs]
         self.reset()
+
+    def on_act(self, callback):
+        self._on_acts.append(callback)
 
     def on_step(self, callback):
         self._on_steps.append(callback)
@@ -120,7 +124,6 @@ class Driver:
             for i in range(len(self._envs)):
                 try:
                     ob = self._envs[i].step(actions[i])
-                    ob = ob() if callable(ob) else ob
                     obs[i] = ob
                 except:
                     # If failure occurs during episode step, let's skip this env
@@ -130,13 +133,18 @@ class Driver:
                     self.handle_sim_failure(i)
                     # Let's skip to next env
                     continue
+            
+            for fn in self._on_acts:
+                fn()
 
+            for i in range(len(self._envs)):
+                obs[i] = obs[i]() if callable(obs[i]) else obs[i]
                 act = actions[i]
-                tran = {k: self._convert(v) for k, v in {**ob, **act}.items()}
+                tran = {k: self._convert(v) for k, v in {**obs[i], **act}.items()}
                 [fn(tran, worker=i, **self._kwargs) for fn in self._on_steps]
                 self._eps[i].append(tran)
                 step += 1
-                if ob["is_last"]:
+                if obs[i]["is_last"]:
                     ep = self._eps[i]
                     ep = {k: self._convert([t[k] for t in ep]) for k in ep[0]}
                     [fn(ep, **self._kwargs) for fn in self._on_episodes]

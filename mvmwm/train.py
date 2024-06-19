@@ -83,6 +83,7 @@ def main():
         logdir / "train_episodes",
         **config.replay,
         augment=config.augment,
+        load=False,
     )
     eval_replay = common.Replay(
         logdir / "eval_episodes",
@@ -99,6 +100,7 @@ def main():
             logdir / "demo_episodes",
             **config.replay,
             augment=config.augment,
+            load=False,
         )
     else:
         demo_replay = None
@@ -107,9 +109,10 @@ def main():
     ###### [3] Set Loggers ######
     step = common.Counter(train_replay.stats["total_steps"])
     outputs = [
+        common.WandbOutput(config.wandb),
         common.TerminalOutput(),
-        common.JSONLOutput(logdir),
-        common.TensorBoardOutput(logdir),
+        # common.JSONLOutput(logdir),
+        # common.TensorBoardOutput(logdir),
     ]
     logger = common.Logger(step, outputs, multiplier=config.action_repeat)
     metrics = collections.defaultdict(list)
@@ -219,6 +222,17 @@ def main():
             )
         )
 
+    # Hack: Do replay prefill before creating the datasets, as they require one
+    # transition as an example (for when not using any demos):
+    agnt = agent.Agent(config, obs_space, act_space, step)
+    train_policy = lambda *args: agnt.policy(*args, mode="train")
+    eval_policy = lambda *args: agnt.policy(*args, mode="eval")
+    train_driver(
+        train_policy,
+        viewpoint=control_input,
+        steps=config.prefill,
+    )
+
     ###### [6] Set Dataset / Agent ######
     # 6-1. Set Datasets
     train_dataset = iter(train_replay.dataset(**config.dataset))
@@ -228,9 +242,9 @@ def main():
     report_dataset = iter(train_replay.dataset(**config.dataset))
 
     # 6-2. Set Agent / Policies
-    agnt = agent.Agent(config, obs_space, act_space, step)
-    train_policy = lambda *args: agnt.policy(*args, mode="train")
-    eval_policy = lambda *args: agnt.policy(*args, mode="eval")
+    # agnt = agent.Agent(config, obs_space, act_space, step)
+    # train_policy = lambda *args: agnt.policy(*args, mode="train")
+    # eval_policy = lambda *args: agnt.policy(*args, mode="eval")
 
     # 6-3. Set train functions
     train_mae = agnt.train_mae
@@ -272,11 +286,7 @@ def main():
             if config.demo_bc:
                 # Switching train/demo batch here to encourage BC pretraining
                 # Anyway, here, demo and training datasets are same
-                train_agent(
-                    next(demo_dataset),
-                    next(train_dataset),
-                    control_input,
-                )
+                train_agent(next(demo_dataset), next(train_dataset), control_input)
             else:
                 train_agent(next(train_dataset), control_input)
 
@@ -286,18 +296,22 @@ def main():
         if should_train_mae(step):
             for _ in range(config.train_mae_steps):
                 mets = train_mae(next(mae_train_dataset), mae_viewpoints)
-                [metrics[key].append(value) for key, value in mets.items()]
+                [
+                    metrics[f"train_mae/{key}"].append(value)
+                    for key, value in mets.items()
+                ]
         if should_train(step):
             for _ in range(config.train_steps):
                 if config.demo_bc:
                     mets = train_agent(
-                        next(train_dataset),
-                        next(demo_dataset),
-                        control_input,
+                        next(train_dataset), next(demo_dataset), control_input
                     )
                 else:
                     mets = train_agent(next(train_dataset), control_input)
-                [metrics[key].append(value) for key, value in mets.items()]
+                [
+                    metrics[f"train_agent/{key}"].append(value)
+                    for key, value in mets.items()
+                ]
         if should_log(step):
             for name, values in metrics.items():
                 logger.scalar(name, np.array(values, np.float64).mean())
@@ -345,7 +359,7 @@ def main():
 # Helper function executed after episode ends
 def per_episode(ep, step, config, logger, should, replay, mode, prefix=""):
     if prefix != "":
-        prefix = prefix + "_"
+        prefix = prefix + "/"
 
     length = len(ep["reward"]) - 1
     score = float(ep["reward"].astype(np.float64).sum())
@@ -353,16 +367,16 @@ def per_episode(ep, step, config, logger, should, replay, mode, prefix=""):
     print(
         f"{mode.title()} episode has {float(success)} success, {length} steps and return {score:.1f}."
     )
-    logger.scalar(f"{prefix}{mode}_success", float(success))
-    logger.scalar(f"{prefix}{mode}_return", score)
-    logger.scalar(f"{prefix}{mode}_length", length)
+    logger.scalar(f"{mode}/{prefix}success", float(success))
+    logger.scalar(f"{mode}/{prefix}return", score)
+    logger.scalar(f"{mode}/{prefix}length", length)
     for key, value in ep.items():
         if re.match(config.log_keys_sum, key):
-            logger.scalar(f"sum_{prefix}{mode}_{key}", ep[key].sum())
+            logger.scalar(f"{mode}/{prefix}sum_{key}", ep[key].sum())
         if re.match(config.log_keys_mean, key):
-            logger.scalar(f"mean_{prefix}{mode}_{key}", ep[key].mean())
+            logger.scalar(f"{mode}/{prefix}mean_{key}", ep[key].mean())
         if re.match(config.log_keys_max, key):
-            logger.scalar(f"max_{prefix}{mode}_{key}", ep[key].max(0).mean())
+            logger.scalar(f"{mode}/{prefix}max_{key}", ep[key].max(0).mean())
 
     if should(step):
         cam_name = prefix.split("_")[0].split("|")[0]
@@ -370,7 +384,7 @@ def per_episode(ep, step, config, logger, should, replay, mode, prefix=""):
             # Because we're randomizing the camera, it's a bit difficult
             # to log videos of training episodes.
             out_video = ep[cam_name]
-            logger.video(f"{prefix}{mode}_policy_image", out_video)
+            logger.video(f"{mode}/{prefix}_policy_image", out_video)
     logger.add(replay.stats, prefix=mode)
     logger.write()
 

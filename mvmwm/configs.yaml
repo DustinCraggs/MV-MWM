@@ -10,12 +10,12 @@ defaults:
   envs_parallel: process
   render_size: [96, 96]
   time_limit: 150
-  steps: 502000
+  steps: 802000
   log_every: 1e3
   eval_every: 1e4
   save_every: 1e4
   eval_eps: 24
-  prefill: 0
+  prefill: 1
   pretrain: 1000
   mae_pretrain: 10000
   train_every: 16
@@ -42,7 +42,7 @@ defaults:
 
   # Env
   use_rotation: False
-  shaped_rewards: True
+  shaped_rewards: False
   num_demos: 100
   use_randomize: False
   default_texture: default
@@ -100,8 +100,15 @@ defaults:
   reward_norm: {momentum: 0.99, scale: 1.0, eps: 1e-8}
   
   # Behavior Cloning
-  demo_bc: True
+  demo_bc: False
   bc_weight: 1.0
+
+  wandb:
+    group: test_mvmwm
+    name: test
+    entity: gyo
+    project: hanabi
+    mode: online
 
 front:
   camera_keys: front

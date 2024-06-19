@@ -26,6 +26,8 @@ class PickUpCup(Task):
         self._detected_cond = DetectedCondition(
             self.cup1, self.success_sensor, negated=True
         )
+        self._has_approached = False
+        self._has_grasped = False
 
         self.register_success_conditions([self._detected_cond, self._grasped_cond])
 
@@ -45,6 +47,9 @@ class PickUpCup(Task):
         self.boundary.sample(self.cup2, min_distance=0.1)
         self.boundary.sample(self.success_sensor, min_distance=0.1)
 
+        self._has_approached = False
+        self._has_grasped = False
+
         return [
             "pick up the %s cup" % target_color_name,
             "grasp the %s cup and lift it" % target_color_name,
@@ -54,24 +59,40 @@ class PickUpCup(Task):
     def variation_count(self) -> int:
         return len(colors)
 
+    # def reward(self) -> float:
+    #     grasped = self._grasped_cond.condition_met()[0]
+
+    #     if not grasped:
+    #         grasp_cup1_reward = np.exp(
+    #             -np.linalg.norm(
+    #                 self.cup1.get_position() - self.robot.arm.get_tip().get_position()
+    #             )
+    #         )
+    #         reward = grasp_cup1_reward
+    #     else:
+    #         lift_cup1_reward = np.exp(
+    #             -np.linalg.norm(
+    #                 self.cup1.get_position() - self.success_sensor.get_position()
+    #             )
+    #         )
+    #         reward = 1.0 + lift_cup1_reward
+    #     return reward
+
     def reward(self) -> float:
         grasped = self._grasped_cond.condition_met()[0]
 
-        if not grasped:
-            grasp_cup1_reward = np.exp(
-                -np.linalg.norm(
-                    self.cup1.get_position() - self.robot.arm.get_tip().get_position()
-                )
-            )
-            reward = grasp_cup1_reward
-        else:
-            lift_cup1_reward = np.exp(
-                -np.linalg.norm(
-                    self.cup1.get_position() - self.success_sensor.get_position()
-                )
-            )
-            reward = 1.0 + lift_cup1_reward
-        return reward
+        distance_to_cup = np.linalg.norm(
+            self.cup1.get_position() - self.robot.arm.get_tip().get_position()
+        )
+        is_proximate_to_cup = distance_to_cup < 0.2
+
+        if grasped and not self._has_grasped:
+            self._has_grasped = True
+            return 20
+        elif is_proximate_to_cup and not self._has_approached:
+            self._has_approached = True
+            return 10
+        return self.success()[0] * 2
 
     def get_low_dim_state(self) -> np.ndarray:
         # For ad-hoc reward computation, attach reward

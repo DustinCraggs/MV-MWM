@@ -14,6 +14,7 @@ run:
 		-e DISPLAY=${DISPLAY} \
 		-v /tmp/.X11-unix:/tmp/.X11-unix:ro \
 		-v $(shell pwd):/mv_mwm \
+		-v $(shell pwd)/../fmrl:/fmrl \
 		$(IMAGE)
 
 exec:

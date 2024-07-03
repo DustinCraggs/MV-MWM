@@ -87,6 +87,10 @@ class WandbOutput:
     def __init__(self, wandb_config):
         self._run = wandb.init(**wandb_config)
 
+    @property
+    def run(self):
+        return self._run
+
     def __call__(self, summaries):
         scalars = {k: float(v) for _, k, v in summaries if len(v.shape) == 0}
         print(scalars)

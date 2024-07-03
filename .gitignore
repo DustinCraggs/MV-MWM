@@ -4,3 +4,4 @@ logs*
 environment.env
 *.ipynb
 .DS_Store
+wandb/

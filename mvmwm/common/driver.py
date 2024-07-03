@@ -85,27 +85,28 @@ class Driver:
                 if ob is None or ob["is_last"]:
                     reset_success = False
                     while not reset_success:
-                        try:
-                            # Try resetting env_i
-                            ob = self._envs[i].reset()
-                            self._obs[i] = ob() if callable(ob) else ob
-                            ob = self._obs[i]
-                            act = {
-                                k: np.zeros(v.shape)
-                                for k, v in self._act_spaces[i].items()
-                            }
-                            tran = {
-                                k: self._convert(v) for k, v in {**ob, **act}.items()
-                            }
-                            [
-                                fn(tran, worker=i, **self._kwargs)
-                                for fn in self._on_resets
-                            ]
-                            self._eps[i] = [tran]
+                        # try:
+                        # Try resetting env_i
+                        ob = self._envs[i].reset()
+                        self._obs[i] = ob() if callable(ob) else ob
+                        ob = self._obs[i]
+                        act = {
+                            k: np.zeros(v.shape)
+                            for k, v in self._act_spaces[i].items()
+                        }
+                        tran = {
+                            k: self._convert(v) for k, v in {**ob, **act}.items()
+                        }
+                        [
+                            fn(tran, worker=i, **self._kwargs)
+                            for fn in self._on_resets
+                        ]
+                        self._eps[i] = [tran]
 
-                            reset_success = True
-                        except:
-                            self.handle_sim_failure(i)
+                        reset_success = True
+                        # except Exception as e:
+                        #     print(e)
+                        #     self.handle_sim_failure(i)
 
             # Stack current obs after resetting
             obs = {k: np.stack([o[k] for o in self._obs]) for k in self._obs[0]}

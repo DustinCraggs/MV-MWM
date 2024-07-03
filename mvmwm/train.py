@@ -8,7 +8,10 @@ import re
 import sys
 import warnings
 import pickle
+import fmrl.labeller
+
 from tqdm import tqdm
+from PIL import Image
 
 try:
     import rich.traceback
@@ -108,12 +111,15 @@ def main():
 
     ###### [3] Set Loggers ######
     step = common.Counter(train_replay.stats["total_steps"])
+    wandb_output = common.WandbOutput(config.wandb)
     outputs = [
         common.WandbOutput(config.wandb),
         common.TerminalOutput(),
         # common.JSONLOutput(logdir),
         # common.TensorBoardOutput(logdir),
     ]
+    wandb_run = wandb_output.run
+
     logger = common.Logger(step, outputs, multiplier=config.action_repeat)
     metrics = collections.defaultdict(list)
 
@@ -202,8 +208,38 @@ def main():
         )
     )
     train_driver.on_step(lambda tran, worker: step.increment())
-    train_driver.on_step(train_replay.add_step)
-    train_driver.on_reset(train_replay.add_step)
+
+    # Set up labeller:
+    if config.vlm_rewards.use_vlm_rewards:
+        labeller = fmrl.labeller.RewardLabeller(
+            config.vlm_rewards.model_path,
+            config.vlm_rewards.prompt,
+            batch_size=config.vlm_rewards.vlm_batch_size,
+            device=config.vlm_rewards.device,
+            label_every=config.vlm_rewards.label_every,
+            wandb_run=wandb_run,
+        )
+
+        def label(tran, worker):
+            image = Image.fromarray(tran["front"])
+            # image = Image.open("test_images/test_0.png").convert("RGB")
+            labeller.send([tran], [worker], [image], [tran["is_last"].item()])
+            results = labeller.receive(
+                max_in_flight_samples=20
+            )
+
+            for result in results:
+                result_tran, ep_idx, step_idx, img, done, label, reward = result
+                print(f"RECONSTRUCTING: {reward=}")
+                print(f"RECONSTRUCTING: {label=}")
+                result_tran["reward"] += reward
+                train_replay.add_step(result_tran)
+
+        train_driver.on_step(label)
+        train_driver.on_reset(label)
+    else:
+        train_driver.on_step(train_replay.add_step)
+        train_driver.on_reset(train_replay.add_step)
 
     # 5-2. Setup Eval Drivers
     eval_driver_dict = dict()

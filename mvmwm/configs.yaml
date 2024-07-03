@@ -5,10 +5,11 @@ defaults:
   loaddir: none
   seed: 0
   task: rlbench_reach_target
-  envs: 8
-  eval_envs: 8
+  envs: 2
+  eval_envs: 2
   envs_parallel: process
-  render_size: [96, 96]
+  render_size: [256, 256]
+  # render_size: [96, 96]
   time_limit: 150
   steps: 802000
   log_every: 1e3
@@ -53,8 +54,10 @@ defaults:
 
   # MAE
   mask_ratio: 0.9
-  mae: {img_h_size: 96, img_w_size: 96, patch_size: 16, embed_dim: 256, depth: 8, num_heads: 4, decoder_embed_dim: 256, decoder_depth: 6, decoder_num_heads: 4, reward_pred: True, early_conv: True, in_chans: 3, ncams: 0, view_masking: 1, viewpoint_pos_emb: True}
-  wm_flat_vit: {img_h_size: 6, img_w_size: 6, patch_size: 1, embed_dim: 128, depth: 2, num_heads: 4, decoder_embed_dim: 128, decoder_depth: 2, decoder_num_heads: 4, in_chans: 256}
+  mae: {img_h_size: 256, img_w_size: 256, patch_size: 32, embed_dim: 256, depth: 8, num_heads: 4, decoder_embed_dim: 256, decoder_depth: 6, decoder_num_heads: 4, reward_pred: True, early_conv: True, in_chans: 3, ncams: 0, view_masking: 1, viewpoint_pos_emb: True}
+  # img_h_size and img_w_size must be real sizes / patch size?
+  wm_flat_vit: {img_h_size: 8, img_w_size: 8, patch_size: 1, embed_dim: 128, depth: 2, num_heads: 4, decoder_embed_dim: 128, decoder_depth: 2, decoder_num_heads: 4, in_chans: 256}
+  # wm_flat_vit: {img_h_size: 6, img_w_size: 6, patch_size: 1, embed_dim: 128, depth: 2, num_heads: 4, decoder_embed_dim: 128, decoder_depth: 2, decoder_num_heads: 4, in_chans: 256}
   image_t_size: 4
   # theta_low | theta_high | phi_low | phi_high | theta_delta | phi_delta | radius_low | radius_high | height_low | height_high | radius_delta | height_delta; All zeros means no camera
   additional_cams: {
@@ -109,6 +112,14 @@ defaults:
     entity: gyo
     project: hanabi
     mode: online
+
+  vlm_rewards:
+    use_vlm_rewards: True
+    model_path: /models/cogvlm2-llama3-chat-19B-int4
+    prompt: "A robot with a gripper attachment is trying to manipulate objects. Ignoring the background, describe the scene, including any goal the robot has achieved in the image and the relative positions of the objects."
+    vlm_batch_size: 2
+    device: cuda:0
+    label_every: 20
 
 front:
   camera_keys: front

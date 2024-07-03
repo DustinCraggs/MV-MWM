@@ -9,7 +9,7 @@ python3 mvmwm/train.py \
     --camera_keys 'front|wrist' \
     --control_input 'front|wrist' \
     --task ${TASK} \
-    --prefill 20000 \
+    --prefill 500 \
     --mae.view_masking 1 \
     --mae.viewpoint_pos_emb True \
     --steps 810000 \
@@ -22,6 +22,7 @@ python3 mvmwm/train.py \
     --shaped_rewards False \
     --wandb.name no_shaping_seed_${SEED} \
     --wandb.group random_rollout_pretrain_no_shaping
+    # --prefill 20000 \
     # --shaped_rewards True \
     # --wandb.name prox_shaped_seed_${SEED} \
     # --wandb.group random_rollout_pretrain_prox_shaped

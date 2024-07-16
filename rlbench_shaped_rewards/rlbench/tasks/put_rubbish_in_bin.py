@@ -1,4 +1,4 @@
-from typing import List
+from typing import Dict, List
 import numpy as np
 import copy
 from pyrep.objects.proximity_sensor import ProximitySensor
@@ -20,18 +20,18 @@ class PutRubbishInBin(Task):
         self.Z_TARGET = 1.0
 
     def init_episode(self, index: int) -> List[str]:
-        tomato1 = Shape("tomato1")
-        tomato2 = Shape("tomato2")
-        x1, y1, z1 = tomato2.get_position()
+        self._tomato1 = Shape("tomato1")
+        self._tomato2 = Shape("tomato2")
+        x1, y1, z1 = self._tomato2.get_position()
         x2, y2, z2 = self.rubbish.get_position()
-        x3, y3, z3 = tomato1.get_position()
+        x3, y3, z3 = self._tomato1.get_position()
         pos = np.random.randint(3)
         if pos == 0:
             self.rubbish.set_position([x1, y1, z2])
-            tomato2.set_position([x2, y2, z1])
+            self._tomato2.set_position([x2, y2, z1])
         elif pos == 2:
             self.rubbish.set_position([x3, y3, z2])
-            tomato1.set_position([x2, y2, z3])
+            self._tomato1.set_position([x2, y2, z3])
 
         self.target1_pos = copy.deepcopy(self.rubbish.get_position())
         self.target1_pos[-1] = self.Z_TARGET
@@ -92,3 +92,31 @@ class PutRubbishInBin(Task):
         reward = self.reward()
         state = super().get_low_dim_state()
         return np.hstack([reward, state])
+
+    def get_info(self) -> Dict[str, float]:
+        return self.get_extra_rewards()
+
+    def get_extra_rewards(self) -> Dict[str, float]:
+        rubbish_grasped = self._grasped_cond.condition_met()[0]
+        tomato_1_grasped = False
+        tomato_2_grasped = False
+        # tomato_1_grasped = self._tomato1.condition_met()[0]
+        # tomato_2_grasped = self._tomato2.condition_met()[0]
+        rubbish_in_bin = self._detected_cond.condition_met()[0]
+
+        def dist_to(shape_1, shape_2=self.robot.arm.get_tip()):
+            return np.linalg.norm(shape_1.get_position() - shape_2.get_position())
+
+        dist_to_rubbish = dist_to(self.rubbish)
+        dist_to_bin = dist_to(self.success_sensor)
+        dist_rubbish_to_bin = dist_to(self.rubbish, self.success_sensor)
+
+        return {
+            "rubbish_grasped_reward": rubbish_grasped,
+            "tomato_grasped_reward": tomato_1_grasped or tomato_2_grasped,
+            "rubbish_in_bin_reward": rubbish_in_bin,
+            "is_proximate_to_rubbish_reward": dist_to_rubbish < 0.2,
+            "is_proximate_to_bin_reward": dist_to_bin < 0.2,
+            "rubbish_is_proximate_to_bin_reward": dist_rubbish_to_bin < 0.1,
+            "is_far_away_from_objects": dist_to_bin > 0.2 and dist_to_rubbish > 0.2,
+        }

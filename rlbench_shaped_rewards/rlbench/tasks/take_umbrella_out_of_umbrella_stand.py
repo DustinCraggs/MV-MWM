@@ -1,4 +1,4 @@
-from typing import List
+from typing import Dict, List
 import numpy as np
 import copy
 from scipy.spatial.transform import Rotation
@@ -59,3 +59,21 @@ class TakeUmbrellaOutOfUmbrellaStand(Task):
         reward = self.reward()
         state = super().get_low_dim_state()
         return np.hstack([reward, state])
+
+    def get_info(self) -> Dict[str, float]:
+        return self.get_extra_rewards()
+
+    def get_extra_rewards(self) -> Dict[str, float]:
+        umbrella_grasped = self._grasped_cond.condition_met()[0]
+
+        def dist_to(shape_1, shape_2=self.robot.arm.get_tip()):
+            return np.linalg.norm(shape_1.get_position() - shape_2.get_position())
+
+        dist_to_umbrella = dist_to(self.umbrella)
+        umbrella_dist_to_target = dist_to(self.umbrella, self.success_sensor)
+
+        return {
+            "umbrella_grasped_reward": umbrella_grasped,
+            "is_proximate_to_umbrella_reward": dist_to_umbrella < 0.2,
+            "umbrella_is_proximate_to_target_reward": umbrella_dist_to_target < 0.2,
+        }

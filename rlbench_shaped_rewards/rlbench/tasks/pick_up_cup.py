@@ -1,4 +1,4 @@
-from typing import List
+from typing import Dict, List
 import numpy as np
 from pyrep.objects.shape import Shape
 from pyrep.objects.proximity_sensor import ProximitySensor
@@ -99,3 +99,25 @@ class PickUpCup(Task):
         reward = self.reward()
         state = super().get_low_dim_state()
         return np.hstack([reward, state])
+
+    def get_info(self) -> Dict[str, float]:
+        return self.get_extra_rewards()
+
+    def get_extra_rewards(self) -> Dict[str, float]:
+        grasped_red_cup = self._grasped_cond.condition_met()[0]
+
+        def dist_to(cup):
+            return np.linalg.norm(
+                cup.get_position() - self.robot.arm.get_tip().get_position()
+            )
+
+        dist_to_red = dist_to(self.cup1)
+        dist_to_other = dist_to(self.cup2)
+        is_far_away = dist_to_red > 0.5 and dist_to_other > 0.5
+
+        return {
+            "grasped_red_cup_reward": grasped_red_cup,
+            "is_proximate_to_red_cup_reward": dist_to_red < 0.2,
+            "is_proximate_to_other_cup_reward": dist_to_other < 0.2,
+            "is_far_away_from_both_cups_reward": is_far_away,
+        }

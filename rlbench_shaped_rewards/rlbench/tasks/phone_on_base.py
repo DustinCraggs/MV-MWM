@@ -1,4 +1,4 @@
-from typing import List
+from typing import Dict, List
 
 import numpy as np
 from pyrep.objects.proximity_sensor import ProximitySensor
@@ -76,3 +76,29 @@ class PhoneOnBase(Task):
         reward = self.reward()
         state = super().get_low_dim_state()
         return np.hstack([reward, state])
+
+    def get_info(self) -> Dict[str, float]:
+        return self.get_extra_rewards()
+
+    def get_extra_rewards(self) -> Dict[str, float]:
+        phone_grasped = self._grasped_cond.condition_met()[0]
+        nothing_grasped = self._nothing_grapsed_cond.condition_met()[0]
+        phone_on_base = self._phone_cond.condition_met()[0]
+
+        def dist_to(shape_1, shape_2=self.robot.arm.get_tip()):
+            return np.linalg.norm(shape_1.get_position() - shape_2.get_position())
+
+        dist_to_phone = dist_to(self.phone)
+        dist_to_base = dist_to(self.success_detector)
+        dist_phone_to_base = dist_to(self.phone, self.success_detector)
+
+        return {
+            "phone_grasped_reward": phone_grasped,
+            "nothing_grasped_reward": nothing_grasped,
+            "phone_on_base_reward": phone_on_base,
+            "phone_on_base_and_nothing_grasped_reward": phone_on_base & nothing_grasped,
+            "base_grasped_reward": not phone_grasped and not nothing_grasped,
+            "is_proximate_to_phone_reward": dist_to_phone < 0.2,
+            "is_proximate_to_base_reward": dist_to_base < 0.2,
+            "phone_is_proximate_to_base_reward": dist_phone_to_base < 0.1,
+        }

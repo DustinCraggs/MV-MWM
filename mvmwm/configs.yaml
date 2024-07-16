@@ -3,10 +3,11 @@ defaults:
   # Train Script
   logdir: /dev/null
   loaddir: none
+  save_replay: False
   seed: 0
   task: rlbench_reach_target
-  envs: 2
-  eval_envs: 2
+  envs: 8
+  eval_envs: 8
   envs_parallel: process
   render_size: [256, 256]
   # render_size: [96, 96]
@@ -47,6 +48,7 @@ defaults:
   num_demos: 100
   use_randomize: False
   default_texture: default
+  add_extra_rewards: True
 
   # Cameras
   camera_keys: 'front|wrist'
@@ -114,12 +116,15 @@ defaults:
     mode: online
 
   vlm_rewards:
-    use_vlm_rewards: True
+    enabled: False
     model_path: /models/cogvlm2-llama3-chat-19B-int4
-    prompt: "A robot with a gripper attachment is trying to manipulate objects. Ignoring the background, describe the scene, including any goal the robot has achieved in the image and the relative positions of the objects."
+    prompt: >-
+        A robototic arm is operating on a table. Ignoring the background, list the goals
+        the robot has achieved in the image, if any.
     vlm_batch_size: 2
     device: cuda:0
-    label_every: 20
+    label_every: 25
+    max_in_flight_samples: 100
 
 front:
   camera_keys: front

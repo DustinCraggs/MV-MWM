@@ -35,6 +35,7 @@ class RLBench:
         verbose=False,
         randomize_texture=False,
         default_texture="default",
+        add_extra_rewards=False,
     ):
         from rlbench.action_modes.action_mode import MoveArmThenGripper
         from rlbench.action_modes.arm_action_modes import EndEffectorPoseViaPlanning
@@ -156,6 +157,7 @@ class RLBench:
         self._shaped_rewards = shaped_rewards
         self._camera_keys = camera_keys
         self._additional_camera = additional_camera
+        self._add_extra_rewards = add_extra_rewards
 
         if actions_min_max:
             self.register_min_max(actions_min_max)
@@ -246,9 +248,12 @@ class RLBench:
 
     def step(self, action):
         assert np.isfinite(action["action"]).all(), action["action"]
+        extra_rewards = {}
         try:
             original_action = self.unnormalize(action["action"])
             _obs, _reward, _ = self._task.step(original_action)
+            if self._add_extra_rewards:
+                extra_rewards = self._task.get_extra_rewards()
             terminal = False
             success, _ = self._task._task.success()
             if success:
@@ -293,6 +298,7 @@ class RLBench:
             "is_terminal": terminal,
             "success": success,
             "state": _obs.get_low_dim_data(),
+            **extra_rewards,
         }
         # images = []
         for key in self._camera_keys:
@@ -356,9 +362,9 @@ class RLBench:
 
     def quat_to_theta(self, quat):
         x2, x3, x4, x1 = quat
-        theta1 = np.arccos(x1 / np.sqrt(x4 ** 2 + x3 ** 2 + x2 ** 2 + x1 ** 2))
-        theta2 = np.arccos(x2 / np.sqrt(x4 ** 2 + x3 ** 2 + x2 ** 2))
-        theta3 = np.arccos(x3 / np.sqrt(x4 ** 2 + x3 ** 2))
+        theta1 = np.arccos(x1 / np.sqrt(x4**2 + x3**2 + x2**2 + x1**2))
+        theta2 = np.arccos(x2 / np.sqrt(x4**2 + x3**2 + x2**2))
+        theta3 = np.arccos(x3 / np.sqrt(x4**2 + x3**2))
         if x4 < 0:
             theta3 = 2 * np.pi - theta3
         thetas = np.hstack([theta1, theta2, theta3])

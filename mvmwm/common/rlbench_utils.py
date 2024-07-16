@@ -19,6 +19,7 @@ def collect_demo(
     use_rotation=False,
     additional_camera=False,
     randomize=False,
+    add_extra_rewards=False,
 ):
     transitions = []
     print("collecting demos.")
@@ -43,6 +44,7 @@ def collect_demo(
                     camera_keys,
                     use_rotation,
                     additional_camera=additional_camera,
+                    add_extra_rewards=add_extra_rewards,
                 )
             )
         else:
@@ -53,6 +55,7 @@ def collect_demo(
                     camera_keys,
                     use_rotation,
                     additional_camera=additional_camera,
+                    add_extra_rewards=add_extra_rewards,
                 )
             )
 
@@ -175,6 +178,7 @@ def extract_from_demo(
     camera_keys,
     use_rotation,
     additional_camera=False,
+    add_extra_rewards=False,
 ):
     transitions = []
 
@@ -216,6 +220,7 @@ def extract_from_demo(
             "success": success,
             "action": prev_action,
             "state": _obs.get_low_dim_data(),
+            **_obs.misc["extra_rewards"],
         }
 
         keys = get_camera_keys(camera_keys)
@@ -249,6 +254,7 @@ def extract_from_paired_demo(
     camera_keys,
     use_rotation,
     additional_camera=False,
+    add_extra_rewards=False,
 ):
     return extract_from_demo(
         demo,
@@ -256,6 +262,7 @@ def extract_from_paired_demo(
         camera_keys,
         use_rotation,
         additional_camera=additional_camera,
+        add_extra_rewards=add_extra_rewards,
     )
 
 
@@ -266,9 +273,9 @@ def get_camera_keys(keys):
 
 def quat_to_theta(quat):
     x2, x3, x4, x1 = quat
-    theta1 = np.arccos(x1 / np.sqrt(x4 ** 2 + x3 ** 2 + x2 ** 2 + x1 ** 2))
-    theta2 = np.arccos(x2 / np.sqrt(x4 ** 2 + x3 ** 2 + x2 ** 2))
-    theta3 = np.arccos(x3 / np.sqrt(x4 ** 2 + x3 ** 2))
+    theta1 = np.arccos(x1 / np.sqrt(x4**2 + x3**2 + x2**2 + x1**2))
+    theta2 = np.arccos(x2 / np.sqrt(x4**2 + x3**2 + x2**2))
+    theta3 = np.arccos(x3 / np.sqrt(x4**2 + x3**2))
     if x4 < 0:
         theta3 = 2 * np.pi - theta3
     thetas = np.array([theta1, theta2, theta3])

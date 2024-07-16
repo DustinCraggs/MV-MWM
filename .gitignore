@@ -5,3 +5,4 @@ environment.env
 *.ipynb
 .DS_Store
 wandb/
+demos/

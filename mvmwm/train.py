@@ -87,6 +87,7 @@ def main():
         **config.replay,
         augment=config.augment,
         load=False,
+        save=config.save_replay,
     )
     eval_replay = common.Replay(
         logdir / "eval_episodes",
@@ -96,6 +97,7 @@ def main():
             maxlen=config.replay.maxlen,
         ),
         load=False,
+        save=config.save_replay,
     )
     # 2-2. Set demo_replay if using demo behavior cloning
     if config.demo_bc:
@@ -104,6 +106,7 @@ def main():
             **config.replay,
             augment=config.augment,
             load=False,
+            save=config.save_replay,
         )
     else:
         demo_replay = None
@@ -152,6 +155,7 @@ def main():
             add_cam_names=all_add_cams,
             randomize_texture=config.use_randomize,
             default_texture=config.default_texture,
+            add_extra_rewards=config.add_extra_rewards,
         )
         if actions_min_max:
             env.register_min_max(actions_min_max)
@@ -178,7 +182,7 @@ def main():
             pickle.dump(actions_min_max, f)
     else:
         actions_min_max = None
-
+    exit()
     # 4-3. Load actions_min_max if resuming from pre-trained models
     if config.loaddir != "none":
         with open(config.loaddir + "/actions_min_max.pkl", "rb") as f:
@@ -210,7 +214,7 @@ def main():
     train_driver.on_step(lambda tran, worker: step.increment())
 
     # Set up labeller:
-    if config.vlm_rewards.use_vlm_rewards:
+    if config.vlm_rewards.enabled:
         labeller = fmrl.labeller.RewardLabeller(
             config.vlm_rewards.model_path,
             config.vlm_rewards.prompt,
@@ -225,7 +229,7 @@ def main():
             # image = Image.open("test_images/test_0.png").convert("RGB")
             labeller.send([tran], [worker], [image], [tran["is_last"].item()])
             results = labeller.receive(
-                max_in_flight_samples=20
+                max_in_flight_samples=config.vlm_rewards.max_in_flight_samples
             )
 
             for result in results:

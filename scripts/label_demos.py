@@ -86,6 +86,8 @@ def label_demos(
         metrics_generators = get_phone_on_base_options_metrics_generators()
     elif metrics_type == "put_rubbish_in_bin_options":
         metrics_generators = get_put_rubbish_in_bin_options_metrics_generators()
+    elif metrics_type == "take_umbrella_out_of_stand_options":
+        metrics_generators = get_take_umbrella_out_of_stand_options_metrics_generators()
     elif metrics_type == "yes_no":
         metrics_generators = [
             RewardMetricsGenerator(reward_key, get_yes_no_reward),
@@ -248,10 +250,10 @@ def get_put_rubbish_in_bin_options_metrics_generators():
         "rubbish_grasped_reward": ["a"],
         "tomato_grasped_reward": ["b"],
         "rubbish_in_bin_reward": ["c"],
-        "is_proximate_to_rubbish_reward": ["a", "f"],
-        "is_proximate_to_bin_reward": ["g"],
-        "rubbish_is_proximate_to_bin_reward": ["h", "c"],
-        # "is_far_away_from_objects": ["e", "i"],
+        "is_proximate_to_rubbish_reward": ["a", "e"],
+        "is_proximate_to_bin_reward": ["f"],
+        "rubbish_is_proximate_to_bin_reward": ["g", "c"],
+        # "is_far_away_from_objects": ["d", "h"],
     }
     return [
         *get_rank_metrics_generators(reward_key_to_letters),
@@ -261,10 +263,10 @@ def get_put_rubbish_in_bin_options_metrics_generators():
 
 def get_take_umbrella_out_of_stand_options_metrics_generators():
     reward_key_to_letters = {
-        "reward": [""],
-        "umbrella_grasped_reward": [""],
-        "is_proximate_to_umbrella_reward": [""],
-        "umbrella_is_proximate_to_target_reward": [""],
+        "reward": ["e"],
+        "umbrella_grasped_reward": ["b"],
+        "is_proximate_to_umbrella_reward": ["f"],
+        "umbrella_is_proximate_to_target_reward": ["e"],
     }
     return [
         *get_rank_metrics_generators(reward_key_to_letters),

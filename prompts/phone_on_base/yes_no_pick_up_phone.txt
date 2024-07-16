@@ -1,0 +1,1 @@
+Is the robot in the image currently holding the phone handset in its gripper? Answer only "yes" or "no", and if unsure answer "no".

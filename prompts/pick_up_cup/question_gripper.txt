@@ -1,0 +1,1 @@
+The image shows the perspective from the gripper of a robotic arm. The tip of the gripper is visible at the bottom of the image. In the image, has the robot succesfully completed the task of grasping the red cup? Answer only "yes" or "no", or if unsure answer "no".

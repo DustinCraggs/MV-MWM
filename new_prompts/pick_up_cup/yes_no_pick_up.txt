@@ -1,0 +1,2 @@
+A robotic arm is manipulating objects on a table, including a red cup and another cup. Describe the scene, including the relative positions of the objects and the way in which the robot is currently interacting with the objects.
+In the image, has the robot grasped the red cup? Answer only "Yes" or "No".

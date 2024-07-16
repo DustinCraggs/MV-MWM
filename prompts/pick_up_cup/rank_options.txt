@@ -1,0 +1,1 @@
+What is the robotic arm doing now? Arrange the options from most to least likely: a) Picking up the red cup, b) Picking up the blue cup, c) Arranging the cups on the table, d) Picking up an object, e) Assuming a neutral position and preparing for the next task, f) Approaching the red cup, g) Approaching the blue cup, h) Lifting the red cup, i) Lifting the blue cup.

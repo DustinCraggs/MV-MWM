@@ -1,0 +1,2 @@
+A robotic arm is manipulating objects on a table, including a phone handset and the base of the phone. Describe the scene, including the relative positions of the objects and the way in which the robot is currently interacting with the objects.
+In the image, has the robot grasped the phone handset? Answer only "Yes" or "No".

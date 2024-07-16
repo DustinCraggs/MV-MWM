@@ -1,0 +1,1 @@
+A robotic arm is manipulating objects on a table. In the image, has the robot succesfully completed the task of grasping the red cup? Answer only "yes" or "no", and if unsure answer "no".

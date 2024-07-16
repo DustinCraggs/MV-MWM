@@ -1,0 +1,1 @@
+The image shows the perspective from the gripper of a robotic arm. The tip of the gripper is visible at the bottom of the image. The robot is manipulating objects on a table, including tomatoes and a scrunched up scrap of paper. In the image, has the robot succesfully completed the task of picking up the scrap of paper? Answer only "yes" or "no".

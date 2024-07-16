@@ -1,0 +1,2 @@
+A robotic arm is manipulating objects on a table, including an umbrella and an umbrella stand. Describe the scene, including the relative positions of the objects and the way in which the robot is currently interacting with the objects.
+In the image, has the robot grasped the umbrella? Answer only "Yes" or "No".

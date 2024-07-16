@@ -1,0 +1,1 @@
+A robotic arm is manipulating objects on a table, including tomatoes and a scrunched up scrap of paper. In the image, has the robot succesfully completed the task of picking up the scrap of paper? Answer only "yes" or "no", and if unsure answer "no".

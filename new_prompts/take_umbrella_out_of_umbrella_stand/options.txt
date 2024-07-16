@@ -1,0 +1,2 @@
+A robotic arm is manipulating objects on a table, including an umbrella and an umbrella stand. Describe the scene, including the relative positions of the objects and the way in which the robot is currently interacting with the objects.
+What has the robot arm achieved in the current state? Arrange the options from most to least likely: a) Picked up the umbrella stand, b) Picked up the umbrella, c) Tipped over the umbrella stand, d) Assumed a neutral position to prepare for the next task, e) Lifted the umbrella out of the stand, f) None of the previous options.

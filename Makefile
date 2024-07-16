@@ -2,7 +2,7 @@ DOCKERFILE = "Dockerfile"
 IMAGE_NAME = mv_mwm:latest
 
 build:
-	docker build -f $(DOCKERFILE) . --tag $(IMAGE)
+	docker build -f $(DOCKERFILE) . --tag $(IMAGE_NAME)
 
 run:
 	docker run \
